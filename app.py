@@ -6,19 +6,25 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from xgboost import plot_importance
 
-# -------------------------
-# Load trained model + scaler + feature columns
-# -------------------------
+# =========================
+# Load Model, Scaler & Feature Columns
+# =========================
 model = joblib.load("diabetes_model.pkl")
 scaler = joblib.load("scaler.pkl")
 feature_columns = joblib.load("feature_columns.pkl")  # Columns used in training
 
+# =========================
+# Page Configuration
+# =========================
 st.set_page_config(page_title="Diabetes Risk Predictor 🩺", layout="wide")
 st.title("🩺 Diabetes Risk Prediction App")
-st.markdown("Enter your health data in the sidebar to predict diabetes risk.")
+st.markdown(
+    "Enter your health data in the sidebar to predict your diabetes risk. "
+    "This app uses XGBoost Machine Learning to provide a risk probability."
+)
 
 # =========================
-# Sidebar Inputs
+# Sidebar Input Section
 # =========================
 st.sidebar.header("Enter Your Health Data 📝")
 
@@ -49,16 +55,16 @@ user_input = {
     "smoking_history_No Info": 1 if smoking=="No Info" else 0
 }
 
-# Align with training columns
-user_df_full = pd.DataFrame(columns=feature_columns)
+# Align input with training features
+user_df = pd.DataFrame(columns=feature_columns)
 for col in feature_columns:
-    user_df_full.loc[0, col] = user_input.get(col, 0)
+    user_df.loc[0, col] = user_input.get(col, 0)
 
 # Scale input
-user_scaled = scaler.transform(user_df_full)
+user_scaled = scaler.transform(user_df)
 
 # =========================
-# Prediction & Display
+# Prediction Section
 # =========================
 if st.sidebar.button("Predict Risk ✅"):
     prob = model.predict_proba(user_scaled)[0][1]
@@ -74,29 +80,35 @@ if st.sidebar.button("Predict Risk ✅"):
         risk = "High Risk 🔴"
         color = "red"
 
-    # Display metrics
+    # -------------------------
+    # Display Prediction Metrics
+    # -------------------------
     st.markdown(f"### Predicted Probability of Diabetes: {prob:.2f}")
-    st.markdown(f"### Risk Level: <span style='color:{color}; font-weight:bold;'>{risk}</span>", unsafe_allow_html=True)
+    st.markdown(f"### Risk Level: <span style='color:{color}; font-weight:bold'>{risk}</span>", unsafe_allow_html=True)
 
-    # Progress bar with color
+    # Progress Bar
     st.markdown("**Probability Meter**")
     st.progress(int(prob*100))
 
-    # Feature Importance
-    st.subheader("🔑 XGBoost Feature Importance")
-    fig, ax = plt.subplots(figsize=(10,5))
-    plot_importance(model, importance_type='weight', ax=ax)
+    # -------------------------
+    # Feature Importance Plot
+    # -------------------------
+    st.subheader("🔑 Feature Importance (XGBoost)")
+    fig, ax = plt.subplots(figsize=(12,6))
+    plot_importance(model, importance_type='weight', ax=ax, max_num_features=10)
+    ax.set_title("Top 10 Important Features", fontsize=14)
     plt.tight_layout()
     st.pyplot(fig)
 
 # =========================
-# About Section
+# About / Info Section
 # =========================
 st.markdown("""
 ---
 #### About This App
-This app predicts your risk of diabetes using your health data.
+This app predicts your **risk of diabetes** using your health data.
 - **High blood glucose and HbA1c** indicate higher risk.
 - **BMI, age, smoking history, and gender** are also considered.
 - Powered by **XGBoost Machine Learning**.
+- For **educational & informational purposes only** (not medical advice).
 """)
