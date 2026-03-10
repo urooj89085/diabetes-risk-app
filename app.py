@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 import joblib
 import matplotlib.pyplot as plt
-import seaborn as sns
 from xgboost import plot_importance
 
 # -------------------------
@@ -11,7 +10,7 @@ from xgboost import plot_importance
 # -------------------------
 model = joblib.load("diabetes_model.pkl")
 scaler = joblib.load("scaler.pkl")
-feature_columns = joblib.load("feature_columns.pkl")  # List of columns used in training
+feature_columns = joblib.load("feature_columns.pkl")  # Columns used in training
 
 st.set_page_config(page_title="Diabetes Risk Predictor 🩺", layout="wide")
 st.title("🩺 Diabetes Risk Prediction App")
@@ -46,15 +45,12 @@ user_input = {
     "smoking_history_No Info": 1 if smoking=="No Info" else 0
 }
 
-# Create a DataFrame with **all training columns**
+# Align with training columns
 user_df_full = pd.DataFrame(columns=feature_columns)
 for col in feature_columns:
-    if col in user_input:
-        user_df_full.loc[0, col] = user_input[col]
-    else:
-        user_df_full.loc[0, col] = 0  # Missing columns filled with 0
+    user_df_full.loc[0, col] = user_input.get(col, 0)  # Fill missing columns with 0
 
-# Scale the user input
+# Scale the input
 user_scaled = scaler.transform(user_df_full)
 
 # =========================
@@ -62,7 +58,7 @@ user_scaled = scaler.transform(user_df_full)
 # =========================
 if st.sidebar.button("Predict Risk"):
     prob = model.predict_proba(user_scaled)[0][1]
-
+    
     # Risk Category
     if prob < 0.3:
         risk = "Low Risk"
@@ -74,12 +70,12 @@ if st.sidebar.button("Predict Risk"):
         risk = "High Risk"
         color = "red"
 
-    # Display Metrics
+    # Display metrics
     st.markdown(f"### Predicted Probability of Diabetes: {prob:.2f}")
     st.markdown(f"### Risk Level: <span style='color:{color};'>{risk}</span>", unsafe_allow_html=True)
 
-    # Probability Bar
-    st.progress(min(max(prob,0),1))
+    # Probability Bar (0-100%)
+    st.progress(int(prob*100))
 
     # Feature Importance
     st.subheader("XGBoost Feature Importance")
@@ -88,7 +84,7 @@ if st.sidebar.button("Predict Risk"):
     st.pyplot(fig)
 
 # =========================
-# Optional Info Section
+# About Section
 # =========================
 st.markdown("""
 ---
