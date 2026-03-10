@@ -4,6 +4,7 @@ import numpy as np
 import joblib
 import matplotlib.pyplot as plt
 import seaborn as sns
+from xgboost import plot_importance
 
 # -------------------------
 # Load trained model + scaler + feature columns
@@ -77,22 +78,14 @@ if st.sidebar.button("Predict Risk ✅"):
     st.markdown(f"### Predicted Probability of Diabetes: {prob:.2f}")
     st.markdown(f"### Risk Level: <span style='color:{color}; font-weight:bold;'>{risk}</span>", unsafe_allow_html=True)
 
-    # Probability Bar (0-100%)
+    # Progress bar with color
     st.markdown("**Probability Meter**")
     st.progress(int(prob*100))
 
-    # =========================
-    # Feature Importance - Horizontal Bar Chart
-    # =========================
+    # Feature Importance
     st.subheader("🔑 XGBoost Feature Importance")
-    importance_dict = model.get_booster().get_score(importance_type='weight')
-    importance_df = pd.DataFrame(list(importance_dict.items()), columns=["Feature", "Importance"])
-    importance_df = importance_df.sort_values(by="Importance", ascending=True)
-
-    fig, ax = plt.subplots(figsize=(10,6))
-    ax.barh(importance_df["Feature"], importance_df["Importance"], color='skyblue')
-    ax.set_xlabel("Importance (Weight)")
-    ax.set_title("Feature Importance")
+    fig, ax = plt.subplots(figsize=(10,5))
+    plot_importance(model, importance_type='weight', ax=ax)
     plt.tight_layout()
     st.pyplot(fig)
 
