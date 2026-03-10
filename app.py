@@ -96,4 +96,4 @@ st.markdown("""
 This app predicts your risk of diabetes using your health data.
 - High blood glucose and HbA1c indicate higher risk.
 - BMI, age, smoking history, and gender are also considered.
-""")AB IS MA KAYA WO ERRO NHIA AYA GA
+""")
