@@ -6,9 +6,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from xgboost import plot_importance
 
-# Load trained model + scaler
+# -------------------------
+# Load trained model + scaler + feature columns
+# -------------------------
 model = joblib.load("diabetes_model.pkl")
 scaler = joblib.load("scaler.pkl")
+feature_columns = joblib.load("feature_columns.pkl")  # List of columns used in training
 
 st.set_page_config(page_title="Diabetes Risk Predictor 🩺", layout="wide")
 st.title("🩺 Diabetes Risk Prediction App")
@@ -26,7 +29,7 @@ gender = st.sidebar.selectbox("Gender", ["Female", "Male", "Other"])
 smoking = st.sidebar.selectbox("Smoking History", ["never","current","former","ever","not current","No Info"])
 
 # =========================
-# Prepare DataFrame
+# Prepare DataFrame with all columns
 # =========================
 user_input = {
     "age": age,
@@ -39,10 +42,20 @@ user_input = {
     "smoking_history_ever": 1 if smoking=="ever" else 0,
     "smoking_history_former": 1 if smoking=="former" else 0,
     "smoking_history_never": 1 if smoking=="never" else 0,
-    "smoking_history_not current": 1 if smoking=="not current" else 0
+    "smoking_history_not current": 1 if smoking=="not current" else 0,
+    "smoking_history_No Info": 1 if smoking=="No Info" else 0
 }
-user_df = pd.DataFrame([user_input])
-user_scaled = scaler.transform(user_df)
+
+# Create a DataFrame with **all training columns**
+user_df_full = pd.DataFrame(columns=feature_columns)
+for col in feature_columns:
+    if col in user_input:
+        user_df_full.loc[0, col] = user_input[col]
+    else:
+        user_df_full.loc[0, col] = 0  # Missing columns filled with 0
+
+# Scale the user input
+user_scaled = scaler.transform(user_df_full)
 
 # =========================
 # Prediction
@@ -83,4 +96,4 @@ st.markdown("""
 This app predicts your risk of diabetes using your health data.
 - High blood glucose and HbA1c indicate higher risk.
 - BMI, age, smoking history, and gender are also considered.
-""")
+""")AB IS MA KAYA WO ERRO NHIA AYA GA
